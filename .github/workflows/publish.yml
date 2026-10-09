@@ -2,7 +2,8 @@
 # n8n requires for verified community nodes.
 #
 # Release: bump package.json + CHANGELOG.md, commit, push a tag v<version>.
-# npm auth: NPM_TOKEN repository secret (or npm Trusted Publishing for this repo).
+# npm auth: npm Trusted Publishing for this repo + publish.yml (preferred; delete the
+# NPM_TOKEN secret then), or an NPM_TOKEN secret with publish rights on the package.
 name: Publish
 
 on:
@@ -21,6 +22,8 @@ jobs:
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org
+      # Trusted Publishing (OIDC) needs npm >= 11.5.1.
+      - run: npm install -g npm@^11.5.1
       - run: npm ci --ignore-scripts
       - name: Tag matches package version
         run: test "v$(node -p "require('./package.json').version")" = "${GITHUB_REF_NAME}"
