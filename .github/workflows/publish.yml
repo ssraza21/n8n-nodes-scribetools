@@ -1,0 +1,31 @@
+# Publishes n8n-nodes-scribetools to npm with a provenance statement, which
+# n8n requires for verified community nodes.
+#
+# Release: bump package.json + CHANGELOG.md, commit, push a tag v<version>.
+# npm auth: NPM_TOKEN repository secret (or npm Trusted Publishing for this repo).
+name: Publish
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - run: npm ci --ignore-scripts
+      - name: Tag matches package version
+        run: test "v$(node -p "require('./package.json').version")" = "${GITHUB_REF_NAME}"
+      # n8n-node release lints, builds and publishes with RELEASE_MODE + provenance.
+      - run: npm run release
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_ACCESS: public
